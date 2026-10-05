@@ -1,6 +1,6 @@
 """
 Wrestling Match Tracker
-Author: Aayush
+Author: Aayush Pande
 Purpose: Contains the main program for recording and analyzing wrestling matches.
 Starter Code/Resources: None
 Date: 2026-10-04
