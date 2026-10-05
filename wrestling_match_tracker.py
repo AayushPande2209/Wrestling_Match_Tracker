@@ -114,7 +114,30 @@ while running:
             print(f"Points Scored: {total_points}")
             print(f"Average Points: {average_points:.1f}")
     elif choice == "4":
-        print("This feature is not available yet.")
+        search_name = input("Opponent name to search for: ").strip()
+        print()
+        if search_name == "":
+            print("Search name cannot be empty.")
+        else:
+            # lower() makes the search ignore capitalization, and "in" lets a
+            # partial name such as "john" find "John Smith".
+            search_text = search_name.lower()
+            found_count = 0
+            match_number = 1
+            for match in matches:
+                if search_text in match["opponent"].lower():
+                    if found_count == 0:
+                        print(f"===== MATCHES FOR '{search_name}' =====")
+                    print(
+                        f"{match_number}. {match['opponent']} - "
+                        f"{match['result'].upper()} "
+                        f"{match['user_score']}-{match['opponent_score']}"
+                    )
+                    found_count += 1
+                match_number += 1
+
+            if found_count == 0:
+                print(f"No matches found for '{search_name}'.")
     elif choice == "5":
         print("Goodbye!")
         running = False
