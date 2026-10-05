@@ -85,7 +85,34 @@ while running:
                 )
                 match_number += 1
     elif choice == "3":
-        print("This feature is not available yet.")
+        print()
+        if len(matches) == 0:
+            print("No matches recorded yet.")
+        else:
+            total_matches = len(matches)
+            win_count = 0
+            loss_count = 0
+            total_points = 0
+
+            for match in matches:
+                if match["result"] == "Win":
+                    win_count += 1
+                else:
+                    loss_count += 1
+                total_points += match["user_score"]
+
+            # Only reached when matches is not empty, so no division by zero.
+            win_percentage = win_count / total_matches * 100
+            average_points = total_points / total_matches
+
+            print("===== SEASON STATISTICS =====")
+            print()
+            print(f"Matches: {total_matches}")
+            print(f"Wins: {win_count}")
+            print(f"Losses: {loss_count}")
+            print(f"Win Percentage: {win_percentage:.1f}%")
+            print(f"Points Scored: {total_points}")
+            print(f"Average Points: {average_points:.1f}")
     elif choice == "4":
         print("This feature is not available yet.")
     elif choice == "5":
