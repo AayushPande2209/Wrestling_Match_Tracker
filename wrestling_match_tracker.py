@@ -8,6 +8,9 @@ Date: 2026-10-04
 
 print("===== WRESTLING MATCH TRACKER =====")
 
+# Program state: every recorded match is stored as a dictionary in this list.
+matches = []
+
 # Program state: the loop keeps running until the user chooses Exit.
 running = True
 
@@ -22,7 +25,26 @@ while running:
     choice = input("Choose an option (1-5): ")
 
     if choice == "1":
-        print("This feature is not available yet.")
+        opponent_name = input("Opponent name: ")
+        # input() returns text, so int() converts the scores to whole numbers.
+        user_score = int(input("Your score: "))
+        opponent_score = int(input("Opponent score: "))
+
+        if user_score > opponent_score:
+            result = "Win"
+        else:
+            result = "Loss"
+
+        match = {
+            "opponent": opponent_name,
+            "user_score": user_score,
+            "opponent_score": opponent_score,
+            "result": result,
+        }
+        matches.append(match)
+
+        print()
+        print(f"Match recorded: {result.upper()} {user_score}-{opponent_score}")
     elif choice == "2":
         print("This feature is not available yet.")
     elif choice == "3":
