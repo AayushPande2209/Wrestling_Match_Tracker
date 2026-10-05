@@ -71,7 +71,19 @@ while running:
         print()
         print(f"Match recorded: {result.upper()} {user_score}-{opponent_score}")
     elif choice == "2":
-        print("This feature is not available yet.")
+        print()
+        if len(matches) == 0:
+            print("No matches recorded yet.")
+        else:
+            print("===== MATCH HISTORY =====")
+            match_number = 1
+            for match in matches:
+                print(
+                    f"{match_number}. {match['opponent']} - "
+                    f"{match['result'].upper()} "
+                    f"{match['user_score']}-{match['opponent_score']}"
+                )
+                match_number += 1
     elif choice == "3":
         print("This feature is not available yet.")
     elif choice == "4":
