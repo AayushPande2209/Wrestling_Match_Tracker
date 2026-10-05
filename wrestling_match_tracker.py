@@ -32,11 +32,12 @@ def get_score(prompt):
     score = None
     while score is None:
         score_text = input(prompt).strip()
-        # isdigit() is False for "-3", so negatives are checked separately
-        # to give a more helpful message.
-        if score_text.isdigit():
+        # isdecimal() is False for "-3", so negatives are checked separately
+        # to give a more helpful message. (isdigit() is not used because it
+        # accepts characters such as "²" that int() cannot convert.)
+        if score_text.isdecimal():
             score = int(score_text)
-        elif score_text.startswith("-") and score_text[1:].isdigit():
+        elif score_text.startswith("-") and score_text[1:].isdecimal():
             print("Score cannot be negative.")
         else:
             print("Please enter a whole number.")
@@ -48,6 +49,12 @@ def add_match(matches):
     opponent_name = get_opponent_name()
     user_score = get_score("Your score: ")
     opponent_score = get_score("Opponent score: ")
+
+    # Wrestling matches always have a winner, so equal scores are not saved.
+    if user_score == opponent_score:
+        print()
+        print("Matches cannot end in a tie. Match not recorded.")
+        return
 
     if user_score > opponent_score:
         result = "Win"
@@ -164,7 +171,7 @@ def main():
 
     while running:
         display_menu()
-        choice = input("Choose an option (1-5): ")
+        choice = input("Choose an option (1-5): ").strip()
 
         if choice == "1":
             add_match(matches)
