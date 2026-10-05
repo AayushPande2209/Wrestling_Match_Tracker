@@ -25,10 +25,35 @@ while running:
     choice = input("Choose an option (1-5): ")
 
     if choice == "1":
-        opponent_name = input("Opponent name: ")
-        # input() returns text, so int() converts the scores to whole numbers.
-        user_score = int(input("Your score: "))
-        opponent_score = int(input("Opponent score: "))
+        # Keep asking for the opponent name until it is not empty.
+        opponent_name = ""
+        while opponent_name == "":
+            opponent_name = input("Opponent name: ").strip()
+            if opponent_name == "":
+                print("Opponent name cannot be empty.")
+
+        # Keep asking for the score until it is a whole number that is not
+        # negative. isdigit() is False for "-3", so negatives are checked
+        # separately to give a more helpful message.
+        user_score = None
+        while user_score is None:
+            score_text = input("Your score: ").strip()
+            if score_text.isdigit():
+                user_score = int(score_text)
+            elif score_text.startswith("-") and score_text[1:].isdigit():
+                print("Score cannot be negative.")
+            else:
+                print("Please enter a whole number.")
+
+        opponent_score = None
+        while opponent_score is None:
+            score_text = input("Opponent score: ").strip()
+            if score_text.isdigit():
+                opponent_score = int(score_text)
+            elif score_text.startswith("-") and score_text[1:].isdigit():
+                print("Score cannot be negative.")
+            else:
+                print("Please enter a whole number.")
 
         if user_score > opponent_score:
             result = "Win"
