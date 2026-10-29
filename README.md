@@ -13,10 +13,6 @@ match was a win or a loss. Matches can then be listed, summarized, or searched
 by opponent. Everything is stored in memory while the program runs, so the
 records are cleared when the program exits.
 
-The project was written for a course based on *Python Crash Course*,
-Chapters 1-7, so it uses only standard Python fundamentals: no external
-packages, classes, databases, or files.
-
 ## Features
 
 - **Add Match** - enter an opponent name, your score, and the opponent's
@@ -75,7 +71,7 @@ nothing else to install.
 Example session:
 
 ```text
-===== WRESTLING MATCH TRACKER =====
+WRESTLING MATCH TRACKER
 
 1. Add Match
 2. View Matches
