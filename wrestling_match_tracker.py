@@ -89,7 +89,7 @@ def view_matches(matches):
         print("No matches recorded yet.")
         return
 
-    print("===== MATCH HISTORY =====")
+    print("MATCH HISTORY")
     match_number = 1
     for match in matches:
         print(format_match(match, match_number))
@@ -126,7 +126,7 @@ def view_statistics(matches):
     win_percentage = win_count / total_matches * 100
     average_points = total_points / total_matches
 
-    print("===== SEASON STATISTICS =====")
+    print("SEASON STATISTICS")
     print()
     print(f"Matches: {total_matches}")
     print(f"Wins: {win_count}")
@@ -152,7 +152,7 @@ def search_opponent(matches):
     for match in matches:
         if search_text in match["opponent"].lower():
             if found_count == 0:
-                print(f"===== MATCHES FOR '{search_name}' =====")
+                print(f"MATCHES FOR '{search_name}'")
             print(format_match(match, match_number))
             found_count += 1
         match_number += 1
@@ -163,7 +163,7 @@ def search_opponent(matches):
 
 def main():
     """Run the menu loop until the user chooses Exit."""
-    print("===== WRESTLING MATCH TRACKER =====")
+    print("WRESTLING MATCH TRACKER")
 
     # Program state: every recorded match is a dictionary in this list.
     matches = []
