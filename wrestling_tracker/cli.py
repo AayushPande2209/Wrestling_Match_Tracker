@@ -3,19 +3,30 @@ Wrestling Match Tracker
 Author: Aayush Pande
 Purpose: Command-line interface for the tracker. It owns all input and
     printing, and delegates match rules and calculations to WrestlingMatch
-    and SeasonTracker.
+    and SeasonTracker, and storage to a MatchRepository.
 Starter Code/Resources: Menu flow adapted from the Project 1 version of
     wrestling_match_tracker.py; no external resources.
 Date: 2026-11-03
 """
 
-from wrestling_tracker.exceptions import MatchValidationError
+from pathlib import Path
+
+from wrestling_tracker.exceptions import (
+    DataPersistenceError,
+    MatchValidationError,
+)
 from wrestling_tracker.match import (
     WrestlingMatch,
     validate_opponent_name,
     validate_score,
 )
+from wrestling_tracker.storage import JsonMatchRepository
 from wrestling_tracker.tracker import SeasonTracker
+
+# Resolved from this file rather than the working directory so the program
+# finds the same data folder no matter where it is started from.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATA_FILE = PROJECT_ROOT / "data" / "matches.json"
 
 
 def display_menu():
@@ -81,13 +92,15 @@ def format_match(match_number, match):
     )
 
 
-def add_match(tracker):
-    """Ask for a match's details and add it to the tracker.
+def add_match(tracker, repository):
+    """Ask for a match's details, add it to the tracker, and save the season.
 
-    A tie is rejected by WrestlingMatch, in which case nothing is added.
+    A tie is rejected by WrestlingMatch, in which case nothing is added or
+    saved.
 
     Args:
         tracker: The SeasonTracker that receives the new match.
+        repository: The MatchRepository used to save the season.
     """
     opponent_name = prompt_for_opponent_name()
     wrestler_score = prompt_for_score("Your score: ")
@@ -105,6 +118,12 @@ def add_match(tracker):
         f"Match recorded: {match.result.upper()} "
         f"{match.wrestler_score}-{match.opponent_score}"
     )
+
+    # Saved immediately so a crash later cannot lose the match.
+    try:
+        repository.save(tracker.get_history())
+    except DataPersistenceError as error:
+        print(f"Warning: the match could not be saved. {error}")
 
 
 def view_matches(tracker):
@@ -168,15 +187,33 @@ def search_opponent(tracker):
         print(format_match(match_number, match))
 
 
-def main():
-    """Run the menu loop until the user chooses Exit.
+def main(repository=None):
+    """Load the saved season, then run the menu loop until the user exits.
+
+    If the data file exists but cannot be loaded, the program explains why
+    and stops without touching the file, so damaged data is never overwritten.
+
+    Args:
+        repository: The MatchRepository to use. Defaults to a
+            JsonMatchRepository for data/matches.json; tests pass their own.
 
     Returns:
-        The exit status for the process; 0 means a normal exit.
+        The exit status for the process: 0 for a normal exit, 1 if the
+        stored data could not be loaded.
     """
+    if repository is None:
+        repository = JsonMatchRepository(DEFAULT_DATA_FILE)
+
     print("WRESTLING MATCH TRACKER")
 
-    tracker = SeasonTracker()
+    try:
+        tracker = SeasonTracker(repository.load())
+    except DataPersistenceError as error:
+        print()
+        print(f"Could not load saved matches. {error}")
+        print("Fix or move the file, then start the program again.")
+        return 1
+
     running = True
 
     while running:
@@ -184,7 +221,7 @@ def main():
         choice = input("Choose an option (1-5): ").strip()
 
         if choice == "1":
-            add_match(tracker)
+            add_match(tracker, repository)
         elif choice == "2":
             view_matches(tracker)
         elif choice == "3":
