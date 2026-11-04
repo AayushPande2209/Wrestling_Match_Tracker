@@ -187,33 +187,13 @@ def search_opponent(tracker):
         print(format_match(match_number, match))
 
 
-def main(repository=None):
-    """Load the saved season, then run the menu loop until the user exits.
-
-    If the data file exists but cannot be loaded, the program explains why
-    and stops without touching the file, so damaged data is never overwritten.
+def run_menu(tracker, repository):
+    """Show the menu repeatedly and carry out the user's choices until Exit.
 
     Args:
-        repository: The MatchRepository to use. Defaults to a
-            JsonMatchRepository for data/matches.json; tests pass their own.
-
-    Returns:
-        The exit status for the process: 0 for a normal exit, 1 if the
-        stored data could not be loaded.
+        tracker: The SeasonTracker holding the season's matches.
+        repository: The MatchRepository used to save new matches.
     """
-    if repository is None:
-        repository = JsonMatchRepository(DEFAULT_DATA_FILE)
-
-    print("WRESTLING MATCH TRACKER")
-
-    try:
-        tracker = SeasonTracker(repository.load())
-    except DataPersistenceError as error:
-        print()
-        print(f"Could not load saved matches. {error}")
-        print("Fix or move the file, then start the program again.")
-        return 1
-
     running = True
 
     while running:
@@ -233,5 +213,53 @@ def main(repository=None):
             running = False
         else:
             print("Invalid choice. Please enter a number from 1 to 5.")
+
+
+def main(repository=None):
+    """Load the saved season, then run the menu until the user exits.
+
+    If the data file exists but cannot be loaded, the program explains why
+    and stops without touching the file, so damaged data is never overwritten.
+    Ending the input (Ctrl+D) or pressing Ctrl+C exits quietly instead of
+    showing a traceback; matches are saved as soon as they are added, so
+    nothing recorded is lost.
+
+    Args:
+        repository: The MatchRepository to use. Defaults to a
+            JsonMatchRepository for data/matches.json; tests pass their own.
+
+    Returns:
+        The exit status for the process: 0 for a normal exit (including
+        closed input), 1 if the stored data could not be loaded, and 130
+        if the user interrupted the program with Ctrl+C.
+    """
+    if repository is None:
+        repository = JsonMatchRepository(DEFAULT_DATA_FILE)
+
+    print("WRESTLING MATCH TRACKER")
+
+    try:
+        tracker = SeasonTracker(repository.load())
+    except DataPersistenceError as error:
+        print()
+        print(f"Could not load saved matches. {error}")
+        print("Fix or move the file, then start the program again.")
+        return 1
+
+    match_count = len(tracker.get_history())
+    if match_count == 1:
+        print("Loaded 1 saved match.")
+    elif match_count > 1:
+        print(f"Loaded {match_count} saved matches.")
+
+    try:
+        run_menu(tracker, repository)
+    except EOFError:
+        print()
+        print("Input closed. Goodbye!")
+    except KeyboardInterrupt:
+        print()
+        print("Interrupted. Goodbye!")
+        return 130
 
     return 0
