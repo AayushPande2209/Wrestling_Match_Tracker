@@ -2,11 +2,20 @@
 Wrestling Match Tracker
 Author: Aayush Pande
 Purpose: Command-line interface for the tracker. It owns all input and
-    printing, and exposes main() as the program's entry function.
-Starter Code/Resources: Logic moved from the Project 1 version of
+    printing, and delegates match rules and calculations to WrestlingMatch
+    and SeasonTracker.
+Starter Code/Resources: Menu flow adapted from the Project 1 version of
     wrestling_match_tracker.py; no external resources.
 Date: 2026-11-03
 """
+
+from wrestling_tracker.exceptions import MatchValidationError
+from wrestling_tracker.match import (
+    WrestlingMatch,
+    validate_opponent_name,
+    validate_score,
+)
+from wrestling_tracker.tracker import SeasonTracker
 
 
 def display_menu():
@@ -19,156 +28,155 @@ def display_menu():
     print("5. Exit")
 
 
-def get_opponent_name():
-    """Keep asking until the user enters a non-empty opponent name."""
-    opponent_name = ""
-    while opponent_name == "":
-        opponent_name = input("Opponent name: ").strip()
-        if opponent_name == "":
-            print("Opponent name cannot be empty.")
-    return opponent_name
+def prompt_for_opponent_name():
+    """Keep asking until the user enters a valid opponent name.
+
+    Returns:
+        The validated opponent name.
+    """
+    while True:
+        try:
+            return validate_opponent_name(input("Opponent name: "))
+        except MatchValidationError as error:
+            print(error)
 
 
-def get_score(prompt):
-    """Keep asking until the user enters a non-negative whole number."""
-    score = None
-    while score is None:
+def prompt_for_score(prompt):
+    """Keep asking until the user enters a valid score.
+
+    The text is checked here only to decide whether int() can convert it;
+    the rules about what makes a score acceptable live in validate_score().
+
+    Args:
+        prompt: The text shown when asking for the score.
+
+    Returns:
+        The score as an int.
+    """
+    while True:
         score_text = input(prompt).strip()
-        # isdecimal() is False for "-3", so negatives are checked separately
-        # to give a more helpful message. (isdigit() is not used because it
-        # accepts characters such as "²" that int() cannot convert.)
-        if score_text.isdecimal():
-            score = int(score_text)
-        elif score_text.startswith("-") and score_text[1:].isdecimal():
-            print("Score cannot be negative.")
-        else:
+        digits = score_text[1:] if score_text.startswith("-") else score_text
+        # isdecimal() rather than isdigit(): isdigit() accepts characters such
+        # as "²" that int() cannot convert.
+        if not digits.isdecimal():
             print("Please enter a whole number.")
-    return score
+            continue
+        try:
+            return validate_score(int(score_text))
+        except MatchValidationError as error:
+            print(error)
 
 
-def add_match(matches):
-    """Ask for a match's details, then store it in the matches list."""
-    opponent_name = get_opponent_name()
-    user_score = get_score("Your score: ")
-    opponent_score = get_score("Opponent score: ")
+def format_match(match_number, match):
+    """Return one match as text, such as '1. John Smith - WIN 8-4'.
 
-    # Wrestling matches always have a winner, so equal scores are not saved.
-    if user_score == opponent_score:
-        print()
-        print("Matches cannot end in a tie. Match not recorded.")
-        return
-
-    if user_score > opponent_score:
-        result = "Win"
-    else:
-        result = "Loss"
-
-    match = {
-        "opponent": opponent_name,
-        "user_score": user_score,
-        "opponent_score": opponent_score,
-        "result": result,
-    }
-    matches.append(match)
-
-    print()
-    print(f"Match recorded: {result.upper()} {user_score}-{opponent_score}")
-
-
-def format_match(match, match_number):
-    """Return one match as text, such as '1. John Smith - WIN 8-4'."""
+    Args:
+        match_number: The match's position in the season, starting at 1.
+        match: The WrestlingMatch to describe.
+    """
     return (
-        f"{match_number}. {match['opponent']} - "
-        f"{match['result'].upper()} "
-        f"{match['user_score']}-{match['opponent_score']}"
+        f"{match_number}. {match.opponent_name} - "
+        f"{match.result.upper()} "
+        f"{match.wrestler_score}-{match.opponent_score}"
     )
 
 
-def view_matches(matches):
-    """Print every recorded match, or a message if there are none."""
+def add_match(tracker):
+    """Ask for a match's details and add it to the tracker.
+
+    A tie is rejected by WrestlingMatch, in which case nothing is added.
+
+    Args:
+        tracker: The SeasonTracker that receives the new match.
+    """
+    opponent_name = prompt_for_opponent_name()
+    wrestler_score = prompt_for_score("Your score: ")
+    opponent_score = prompt_for_score("Opponent score: ")
+
     print()
-    if len(matches) == 0:
+    try:
+        match = WrestlingMatch(opponent_name, wrestler_score, opponent_score)
+    except MatchValidationError as error:
+        print(error)
+        return
+
+    tracker.add_match(match)
+    print(
+        f"Match recorded: {match.result.upper()} "
+        f"{match.wrestler_score}-{match.opponent_score}"
+    )
+
+
+def view_matches(tracker):
+    """Print every recorded match, or a message if there are none.
+
+    Args:
+        tracker: The SeasonTracker to read from.
+    """
+    print()
+    matches = tracker.get_history()
+    if not matches:
         print("No matches recorded yet.")
         return
 
     print("MATCH HISTORY")
-    match_number = 1
-    for match in matches:
-        print(format_match(match, match_number))
-        match_number += 1
+    for match_number, match in enumerate(matches, start=1):
+        print(format_match(match_number, match))
 
 
-def calculate_statistics(matches):
-    """Return the win count, loss count, and total points from the matches."""
-    win_count = 0
-    loss_count = 0
-    total_points = 0
+def view_statistics(tracker):
+    """Print the season statistics, or a message if there are no matches.
 
-    for match in matches:
-        if match["result"] == "Win":
-            win_count += 1
-        else:
-            loss_count += 1
-        total_points += match["user_score"]
-
-    # Returning several values at once gives a tuple, which is unpacked by
-    # the caller.
-    return win_count, loss_count, total_points
-
-
-def view_statistics(matches):
-    """Print the season statistics, or a message if there are no matches."""
+    Args:
+        tracker: The SeasonTracker to read from.
+    """
     print()
-    total_matches = len(matches)
-    if total_matches == 0:
+    statistics = tracker.get_statistics()
+    if statistics["total_matches"] == 0:
         print("No matches recorded yet.")
         return
 
-    win_count, loss_count, total_points = calculate_statistics(matches)
-    win_percentage = win_count / total_matches * 100
-    average_points = total_points / total_matches
-
     print("SEASON STATISTICS")
     print()
-    print(f"Matches: {total_matches}")
-    print(f"Wins: {win_count}")
-    print(f"Losses: {loss_count}")
-    print(f"Win Percentage: {win_percentage:.1f}%")
-    print(f"Points Scored: {total_points}")
-    print(f"Average Points: {average_points:.1f}")
+    print(f"Matches: {statistics['total_matches']}")
+    print(f"Wins: {statistics['wins']}")
+    print(f"Losses: {statistics['losses']}")
+    print(f"Win Percentage: {statistics['win_percentage']:.1f}%")
+    print(f"Points Scored: {statistics['total_points']}")
+    print(f"Average Points: {statistics['average_points']:.1f}")
 
 
-def search_opponent(matches):
-    """Ask for a name and print every match whose opponent name contains it."""
+def search_opponent(tracker):
+    """Ask for a name and print every match whose opponent contains it.
+
+    Args:
+        tracker: The SeasonTracker to search.
+    """
     search_name = input("Opponent name to search for: ").strip()
     print()
     if search_name == "":
         print("Search name cannot be empty.")
         return
 
-    # lower() makes the search ignore capitalization, and "in" lets a
-    # partial name such as "john" find "John Smith".
-    search_text = search_name.lower()
-    found_count = 0
-    match_number = 1
-    for match in matches:
-        if search_text in match["opponent"].lower():
-            if found_count == 0:
-                print(f"MATCHES FOR '{search_name}'")
-            print(format_match(match, match_number))
-            found_count += 1
-        match_number += 1
-
-    if found_count == 0:
+    results = tracker.search_opponents(search_name)
+    if not results:
         print(f"No matches found for '{search_name}'.")
+        return
+
+    print(f"MATCHES FOR '{search_name}'")
+    for match_number, match in results:
+        print(format_match(match_number, match))
 
 
 def main():
-    """Run the menu loop until the user chooses Exit and return an exit status."""
+    """Run the menu loop until the user chooses Exit.
+
+    Returns:
+        The exit status for the process; 0 means a normal exit.
+    """
     print("WRESTLING MATCH TRACKER")
 
-    # Program state: every recorded match is a dictionary in this list.
-    matches = []
+    tracker = SeasonTracker()
     running = True
 
     while running:
@@ -176,13 +184,13 @@ def main():
         choice = input("Choose an option (1-5): ").strip()
 
         if choice == "1":
-            add_match(matches)
+            add_match(tracker)
         elif choice == "2":
-            view_matches(matches)
+            view_matches(tracker)
         elif choice == "3":
-            view_statistics(matches)
+            view_statistics(tracker)
         elif choice == "4":
-            search_opponent(matches)
+            search_opponent(tracker)
         elif choice == "5":
             print("Goodbye!")
             running = False
