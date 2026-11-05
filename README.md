@@ -319,6 +319,5 @@ this repository.
 
 [Project 2 Slide Deck](PASTE_VIEWABLE_SLIDE_DECK_URL_HERE)
 
-The video link is at the very top of this file. Both links are still
-placeholders: **the video has not been recorded or uploaded, and the slide deck
-has not been linked yet.**
+The video link is at the very top of this file. **The slide deck link above is
+still a placeholder and has not been linked yet.**
