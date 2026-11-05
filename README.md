@@ -1,4 +1,4 @@
-[YouTube Presentation](https://youtu.be/SqUbo4ywlB4)
+[YouTube Presentation](https://youtu.be/SLg932WUy7A)
 
 # Wrestling Match Tracker
 
@@ -314,10 +314,3 @@ than exact formatting, so they do not break when wording is polished.
 recording, validation, history, statistics, search, refactoring into
 functions, testing, and documentation). Its history is preserved unchanged in
 this repository.
-
-## Presentation
-
-[Project 2 Slide Deck](PASTE_VIEWABLE_SLIDE_DECK_URL_HERE)
-
-The video link is at the very top of this file. **The slide deck link above is
-still a placeholder and has not been linked yet.**
