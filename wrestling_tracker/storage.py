@@ -132,7 +132,12 @@ class JsonMatchRepository(MatchRepository):
                 temporary_file.write("\n")
             temporary_path.replace(self._file_path)
         except OSError as error:
-            temporary_path.unlink(missing_ok=True)
+            # Cleanup is best effort: if it fails too, the original error is
+            # still the one worth reporting.
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             raise DataPersistenceError(
                 f"Could not save to {self._file_path}: {error}"
             ) from error
